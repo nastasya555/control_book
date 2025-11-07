@@ -1,30 +1,30 @@
+import os
+import sys
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-from src.library_catalog.settings import settings
-from src.library_catalog import models
 from alembic import context
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+# Добавляем путь к src для импортов
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from src.library_catalog.core.settings import settings
+from src.library_catalog.core.database import Base
+from src.library_catalog.data.models.book import Book  
+
+
 config = context.config
 if getattr(settings, "database_url", None):
     config.set_main_option("sqlalchemy.url", settings.database_url)
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
+
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-target_metadata = models.Base.metadata
-#target_metadata = None
 
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
+target_metadata = Base.metadata
+
+
 
 
 def run_migrations_offline() -> None:

@@ -2,6 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from .settings import settings
 
+
 class Base(DeclarativeBase):
     pass
 
@@ -19,10 +20,11 @@ SessionLocal = sessionmaker(
     future=True,
 )
 
+
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-       
+

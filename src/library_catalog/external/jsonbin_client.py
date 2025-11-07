@@ -1,51 +1,50 @@
-import os
 from typing import Any, Dict, Tuple
 
-import httpx
+from .base_client import BaseApiClient, ApiClientError
 
 
-class JsonBinClient:
+class JsonBinClient(BaseApiClient):
     """Мини‑клиент jsonbin.io для чтения/записи целого JSON‑объекта с ETag.
 
     Ожидается схема: {"books": [...]}.
     """
 
     def __init__(self, base_url: str, bin_id: str, api_key: str) -> None:
-        self.base_url = base_url.rstrip("/")
+        super().__init__(base_url)
         self.bin_id = bin_id
         self.api_key = api_key
         self._headers = {"X-Master-Key": self.api_key}
+
+    def client_name(self) -> str:
+        return "jsonbin"
 
     def _bin_url(self) -> str:
         return f"{self.base_url}/b/{self.bin_id}"
 
     def read_all(self) -> Tuple[Dict[str, Any], str | None]:
         """Прочитать весь объект и вернуть (record, etag)."""
-        url = self._bin_url()
-        with httpx.Client(timeout=10) as client:
-            r = client.get(url, headers=self._headers)
-            r.raise_for_status()
-            payload = r.json()
-            record = payload.get("record", payload)
-            etag = r.headers.get("etag")
-            return record, etag
+        raw = self._request(
+            "GET", "/b/" + self.bin_id, headers=self._headers, return_json=False
+        )
+        payload = raw.json() if raw else {}
+        record = payload.get("record", payload)
+        etag = raw.headers.get("etag") if raw is not None else None
+        return record, etag
 
     def write_all(self, record: Dict[str, Any], etag: str | None) -> str:
         """Перезаписать объект целиком. Если передан etag — используем If-Match.
 
         Возвращает новый etag из ответа.
         """
-        url = self._bin_url()
         headers = dict(self._headers)
         headers["Content-Type"] = "application/json"
         if etag:
             headers["If-Match"] = etag
-        with httpx.Client(timeout=10) as client:
-            r = client.put(url, headers=headers, json=record)
-            if r.status_code == 412:
-                raise RuntimeError("jsonbin: ETag mismatch (412). Re-read and retry.")
-            r.raise_for_status()
-            new_etag = r.headers.get("etag", "")
-            return new_etag
-
-
+        raw = self._request(
+            "PUT", "/b/" + self.bin_id, headers=headers, json=record, return_json=False
+        )
+        if raw.status_code == 412:
+            raise ApiClientError(
+                "jsonbin: ETag mismatch (412). Re-read and retry.", status=412
+            )
+        return raw.headers.get("etag", "")

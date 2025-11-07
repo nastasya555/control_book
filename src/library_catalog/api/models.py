@@ -1,14 +1,7 @@
 import uuid
-from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr
-from sqlalchemy import Boolean
-from sqlalchemy import Column
-from sqlalchemy import String, Integer
-from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import DeclarativeBase
+from pydantic import BaseModel
 
 
 class TunedMode(BaseModel):
@@ -16,20 +9,20 @@ class TunedMode(BaseModel):
 
 
 class BookCreate(BaseModel):
-    title: str 
-    author: str 
-    year: int 
-    genre: str 
+    title: str
+    author: str
+    year: int
+    genre: str
     pages: int
     isbn: Optional[str] = None  # для обогащения из Open Library
 
 
 class ShowBook(TunedMode):
     book_id: uuid.UUID
-    title: str 
-    author: str 
-    year: int 
-    genre: str 
+    title: str
+    author: str
+    year: int
+    genre: str
     pages: int
     available: bool
     extra: Optional[dict] = None  # обложка/описание/subjects и т.д.
