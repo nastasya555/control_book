@@ -19,3 +19,6 @@ httpx==0.27.0
 
 # Блокировки файлов для конкурентного доступа на Windows/Linux
 portalocker==2.8.2
+
+# Circuit Breaker
+circuitbreaker==1.4.0
